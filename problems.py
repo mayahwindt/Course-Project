@@ -213,3 +213,129 @@ class ConnectFour:                   # start of the code for connect four game
 
       cv2.imshow('ConnectFour',screen)                    # shows the board
       cv2.waitKey(ms)                                     # keeps the board up for ms milliseconds before the next move
+
+class Quarto:                        # start of the code for quarto
+   # each piece is a number 0-15 and has 4 traits (1 = yes, 0 = no): tall, dark, square, hollow
+   traits = [[0,0,0,0],[0,0,0,1],[0,0,1,0],[0,0,1,1],
+             [0,1,0,0],[0,1,0,1],[0,1,1,0],[0,1,1,1],
+             [1,0,0,0],[1,0,0,1],[1,0,1,0],[1,0,1,1],
+             [1,1,0,0],[1,1,0,1],[1,1,1,0],[1,1,1,1]]
+   def __init__(self):
+      board = np.zeros((4,4)).astype(int) - 1   # the board is 4x4, -1 = empty square
+      piece = np.random.randint(16)             # the first piece to place is picked at random
+      self.state = (board,piece)                # the state is the board and the piece to place
+      self.ticks=-1
+   def getLegalMoves(self, state=None):
+      if state is None:
+         state = self.state
+      board = state[0]
+      piece = state[1]
+      moves = []
+      for i in range(4):
+         for j in range(4):
+            if board[i,j]==-1:                   # empty square = you can place the piece there
+               for p in range(16):
+                  if p not in board and p!=piece:   # a piece that is still left to give
+                     moves.append((i,j,p))       # move = (row, column, piece to give the other player)
+      if len(moves)==0:                          # last piece of the game, nothing left to give
+         for i in range(4):
+            for j in range(4):
+               if board[i,j]==-1:
+                  moves.append((i,j,-1))
+      return moves
+   def getSuccessor(self, move, state):
+      board = state[0]
+      piece = state[1]
+      board[move[0],move[1]] = piece             # place the piece on the square
+      return (board,move[2])                     # the other player now has to place the piece we gave them
+   def doMove(self,move):
+      self.state = self.getSuccessor(move,self.state)
+      self.ticks+=1
+   def isTerminal(self, state=None):
+      if state is None:
+         state = self.state
+      terminal = False
+      val = self.evalTerminal(state)
+      if val==0 and np.sum(state[0]!=-1)==16:    # nobody won and the board is full = draw
+         terminal = True
+      if val!=0:                                 # someone won
+         terminal = True
+      return terminal
+   def evalTerminal(self, state=None):
+      if state is None:
+         state = self.state
+      board = state[0]
+      win = False
+
+      for i in range(4):                         # row check
+         if board[i,0]!=-1 and board[i,1]!=-1 and board[i,2]!=-1 and board[i,3]!=-1:
+            for t in range(4):                   # check each of the 4 traits
+               total = self.traits[board[i,0]][t] + self.traits[board[i,1]][t] + self.traits[board[i,2]][t] + self.traits[board[i,3]][t]
+               if total==4 or total==0:          # all 4 pieces share this trait
+                  win = True
+
+      for j in range(4):                         # column check
+         if board[0,j]!=-1 and board[1,j]!=-1 and board[2,j]!=-1 and board[3,j]!=-1:
+            for t in range(4):
+               total = self.traits[board[0,j]][t] + self.traits[board[1,j]][t] + self.traits[board[2,j]][t] + self.traits[board[3,j]][t]
+               if total==4 or total==0:
+                  win = True
+
+      if board[0,0]!=-1 and board[1,1]!=-1 and board[2,2]!=-1 and board[3,3]!=-1:      # diagonal check going down-right
+         for t in range(4):
+            total = self.traits[board[0,0]][t] + self.traits[board[1,1]][t] + self.traits[board[2,2]][t] + self.traits[board[3,3]][t]
+            if total==4 or total==0:
+               win = True
+
+      if board[3,0]!=-1 and board[2,1]!=-1 and board[1,2]!=-1 and board[0,3]!=-1:      # diagonal check going up-right
+         for t in range(4):
+            total = self.traits[board[3,0]][t] + self.traits[board[2,1]][t] + self.traits[board[1,2]][t] + self.traits[board[0,3]][t]
+            if total==4 or total==0:
+               win = True
+
+      val = 0
+      if win==True:
+         if np.sum(board!=-1)%2==1:              # odd number of pieces = player 0 placed the last piece
+            val = 1
+         else:                                   # even number of pieces = player 1 placed the last piece
+            val = -1
+      return val
+   def getWinner(self, state=None):
+      if state is None:
+         state = self.state
+      val = self.evalTerminal(state)
+      if val==1:
+         return 0                                # player 0 won
+      elif val==-1:
+         return 1                                # player 1 won
+      else:
+         return -1                               # draw
+   def showState(self, ms = 1000,state=None):    # draws the board in a pop up window
+      if state is None:
+         state = self.state
+      board = state[0]
+
+      screen = np.zeros((400,400)).astype(np.uint8)              # 4 rows x 4 columns, 100 pixels each
+      for k in range(1,4):                                         # 3 lines across and 3 lines down
+         screen = cv2.line(screen,(0,k*100),(399,k*100),255)
+         screen = cv2.line(screen,(k*100,0),(k*100,399),255)
+
+      for i in range(4):                                           # goes through every row
+         for j in range(4):                                        # goes through every column
+            if board[i,j]!=-1:                                     # there is a piece here
+               p = board[i,j]
+               size = 20                                           # short = small
+               if self.traits[p][0]==1:
+                  size = 40                                        # tall = big
+               fill = 2                                            # light = outline
+               if self.traits[p][1]==1:
+                  fill = -1                                        # dark = filled in
+               if self.traits[p][2]==1:                            # square
+                  screen = cv2.rectangle(screen,(50+j*100-size,50+i*100-size),(50+j*100+size,50+i*100+size),255,fill)
+               else:                                               # round
+                  screen = cv2.circle(screen,(50+j*100,50+i*100),size,255,fill,cv2.LINE_AA)
+               if self.traits[p][3]==1:                            # hollow = gray dot in the middle
+                  screen = cv2.circle(screen,(50+j*100,50+i*100),6,128,-1,cv2.LINE_AA)
+
+      cv2.imshow('Quarto',screen)                                  # shows the board
+      cv2.waitKey(ms)                                              # keeps the board up for ms milliseconds
