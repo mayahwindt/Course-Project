@@ -110,3 +110,106 @@ class TicTacToe:
                
       cv2.imshow('TicTacToe',screen)
       cv2.waitKey(ms)
+
+class ConnectFour:                   # start of the code for connect four game
+   def __init__(self):
+      self.state = np.zeros((6,7))   # the board is 6x7 in connect four
+      self.ticks=-1
+   def getLegalMoves(self, state=None):
+      if state is None:
+         state = self.state
+      moves = []
+      mark = 1                       # player 0 = 1 player 1 = -1
+      if np.sum(np.abs(state))%2!=0:
+         mark = -1
+      for col in range(7):           # checks the top row to see if there is a piece there
+         if state[0,col]==0:         # top square empty = column not full = you can place a piece there
+            moves.append((mark,col))
+      return moves
+   def getSuccessor(self, move, state):
+      mark = move[0]
+      col = move[1]
+      for row in range(5,-1,-1):     # start at the bottom row and go up
+         if state[row,col]==0:       # find the lowest empty square
+            state[row,col] = mark    # mark the square as 1 or -1 to show which player moved there
+            break
+      return state
+   def doMove(self,move):
+      self.state = self.getSuccessor(move,self.state)
+      self.ticks+=1
+   def isTerminal(self, state=None):
+      if state is None:
+         state = self.state
+      terminal = False
+      val = self.evalTerminal(state)
+      if val==0 and np.sum(np.abs(state))==42:   # nobody won and the board is full = draw
+         terminal = True
+      if val!=0:                                 # someone won
+         terminal = True
+      return terminal
+   def evalTerminal(self, state=None):           # checks if anyone has won in any direction
+      if state is None:
+         state = self.state
+      val = 0
+
+      for row in range(6):                       # horizontal check
+         for col in range(4):
+            total = state[row,col] + state[row,col+1] + state[row,col+2] + state[row,col+3]
+            if total==4:                         # if player 0 won it will total up 4
+               val = 1
+            if total==-4:                        # if player 1 won it will total up -4
+               val = -1
+
+      for row in range(3):                       # vertical check
+         for col in range(7):
+            total = state[row,col] + state[row+1,col] + state[row+2,col] + state[row+3,col]
+            if total==4:
+               val = 1
+            if total==-4:
+               val = -1
+
+      for row in range(3):                       # diagonal check going down-right
+         for col in range(4):
+            total = state[row,col] + state[row+1,col+1] + state[row+2,col+2] + state[row+3,col+3]
+            if total==4:
+               val = 1
+            if total==-4:
+               val = -1
+
+      for row in range(3,6):                     # diagonal check going up-right
+         for col in range(4):
+            total = state[row,col] + state[row-1,col+1] + state[row-2,col+2] + state[row-3,col+3]
+            if total==4:
+               val = 1
+            if total==-4:
+               val = -1
+      return val
+   def getWinner(self, state=None):
+      if state is None:
+         state = self.state
+      val = self.evalTerminal(state)
+      if val==1:
+         return 0                    # player 0 won
+      elif val==-1:
+         return 1                    # player 1 won
+      else:
+         return -1                   # draw
+   
+   def showState(self, ms = 1000,state=None):     # draws the board in a pop up window
+      if state is None:
+         state = self.state
+
+      screen = np.zeros((300,350,3)).astype(np.uint8)     # window is 300 tall and 350 wide, the 3 makes it a color picture
+      screen[:,:] = (255,0,0)                             # makes the whole background blue like a connect four board
+
+      for i in range(state.shape[0]):                     # goes through every row
+         for j in range(state.shape[1]):                  # goes through every column
+            color = (255,255,255)                         # empty spot = white
+            if state[i,j]==1:
+               color = (0,0,255)                          # player 0 = red
+            if state[i,j]==-1:
+               color = (0,255,255)                        # player 1 = yellow
+            screen = cv2.circle(screen, (25 +j*50,25+i*50), 20, color, -1,cv2.LINE_AA)   # draws a filled circle in the middle of the square
+
+      cv2.imshow('ConnectFour',screen)                    # shows the board
+      cv2.waitKey(ms)                                     # keeps the board up for ms milliseconds before the next move
