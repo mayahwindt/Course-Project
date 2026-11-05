@@ -14,5 +14,8 @@ algorithm and one player uses another. If your problem is snake, you might show 
 (whichever comes first).
 '''
 
-demoGame = prb.Game(prb.ConnectFour(),alg.RandomAgent(),alg.RandomAgent())
+demoGame = prb.Game(prb.ConnectFour(),alg.RandomAgent(),alg.RandomAgent())   # connect four demo
+demoGame.playGame()
+
+demoGame = prb.Game(prb.Quarto(),alg.RandomAgent(),alg.RandomAgent())        # quarto demo
 demoGame.playGame()
