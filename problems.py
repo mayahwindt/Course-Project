@@ -212,7 +212,7 @@ class ConnectFour:                   # start of the code for connect four game
             screen = cv2.circle(screen, (25 +j*50,25+i*50), 20, color, -1,cv2.LINE_AA)   # draws a filled circle in the middle of the square
 
       cv2.imshow('ConnectFour',screen)                    # shows the board
-      cv2.waitKey(ms)                                     # keeps the board up for ms milliseconds before the next move
+      cv2.waitKey(ms)                                     # keeps the board up for milliseconds before the next move
 
 class Quarto:                        # start of the code for quarto
    # each piece is a number 0-15 and has 4 traits (1 = yes, 0 = no): tall, dark, square, hollow
@@ -247,7 +247,7 @@ class Quarto:                        # start of the code for quarto
       board = state[0]
       piece = state[1]
       board[move[0],move[1]] = piece             # place the piece on the square
-      return (board,move[2])                     # the other player now has to place the piece we gave them
+      return (board,move[2])                     # the other player now has to place the piece the other player gave them
    def doMove(self,move):
       self.state = self.getSuccessor(move,self.state)
       self.ticks+=1
